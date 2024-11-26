@@ -4,8 +4,8 @@ import { KeyManager, MemoryKeyStore, MemoryPrivateKeyStore } from '@veramo/key-m
 import { KeyManagementSystem, SecretBox } from '@veramo/kms-local'
 import { DIDManager, MemoryDIDStore } from '@veramo/did-manager'
 import { QuickDIDProvider } from '../src/quick-did-provider'
-import { createGanacheProvider } from './utils/ganache-providers'
-import { createEthersProvider } from './utils/ethers-provider'
+// import { createGanacheProvider } from './utils/ganache-providers'
+// import { createEthersProvider } from './utils/ethers-provider'
 import { EthrDIDProvider } from '@veramo/did-provider-ethr'
 import { CredentialIssuerEIP712, ICredentialIssuerEIP712 } from '@veramo/credential-eip712'
 import { CredentialPlugin } from '@veramo/credential-w3c'
@@ -38,8 +38,8 @@ import {
 
 jest.setTimeout(10000)
 
-const { provider, registry } = await createGanacheProvider()
-const ethersProvider = createEthersProvider()
+// const { provider, registry } = await createGanacheProvider()
+// const ethersProvider = createEthersProvider()
 
 const quickDIDProvider = new QuickDIDProvider({
   defaultKms: 'local',
@@ -91,42 +91,42 @@ agent = createAgent<
       store: new KeyStore(dbConnection),
       kms: {
         local: new KeyManagementSystem(new PrivateKeyStore(dbConnection, new SecretBox(secretKey))),
-        web3: new Web3KeyManagementSystem({
-          ethers: ethersProvider as any, // different versions of ethers complain about a type mismatch here
-        }),
+        // web3: new Web3KeyManagementSystem({
+        //   ethers: ethersProvider as any, // different versions of ethers complain about a type mismatch here
+        // }),
       },
     }),
     new DIDManager({
       store: new MemoryDIDStore(),
       providers: {
         'did:quick': quickDIDProvider,
-        'did:ethr': new EthrDIDProvider({
-          defaultKms: 'local',
-          ttl: 60 * 60 * 24 * 30 * 12 + 1,
-          networks: [
-            {
-              chainId: 1337,
-              name: 'ganache',
-              provider: provider as any, // different versions of ethers complain about a type mismatch here
-              registry,
-            },
-          ],
-        }),
+        // 'did:ethr': new EthrDIDProvider({
+        //   defaultKms: 'local',
+        //   ttl: 60 * 60 * 24 * 30 * 12 + 1,
+        //   networks: [
+        //     {
+        //       chainId: 1337,
+        //       name: 'ganache',
+        //       provider: provider as any, // different versions of ethers complain about a type mismatch here
+        //       registry,
+        //     },
+        //   ],
+        // }),
       },
       defaultProvider: 'did:quick',
     }),
     new DIDResolverPlugin({
-      ...ethrDidResolver({
-        infuraProjectId,
-        networks: [
-          {
-            name: 'ganache',
-            chainId: 1337,
-            provider: provider as any,
-            registry,
-          },
-        ],
-      }),
+      // ...ethrDidResolver({
+      //   infuraProjectId,
+      //   networks: [
+      //     {
+      //       name: 'ganache',
+      //       chainId: 1337,
+      //       provider: provider as any,
+      //       registry,
+      //     },
+      //   ],
+      // }),
       ...quickDidResolver({ nodeEndpoint: 'http://localhost:3131/resolveDIDQuick' }),
     }),
     new DataStore(dbConnection),

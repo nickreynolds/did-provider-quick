@@ -116,24 +116,12 @@ dependencies:
   dotenv:
     specifier: ^16.4.5
     version: 16.4.5
-  ethers:
-    specifier: ^6.12.1
-    version: 6.12.1
-  ethr-did-resolver:
-    specifier: ^10.1.5
-    version: 10.1.5
-  http:
-    specifier: ^0.0.1-security
-    version: 0.0.1-security
   jest:
     specifier: ^29.7.0
     version: 29.7.0(@types/node@20.12.11)(ts-node@10.9.2)
   open:
     specifier: ^10.1.0
     version: 10.1.0
-  swagger-ui-express:
-    specifier: ^5.0.0
-    version: 5.0.0(express@4.19.2)
   ts-node:
     specifier: ^10.9.2
     version: 10.9.2(@types/node@20.12.11)(typescript@5.3.3)
@@ -7680,10 +7668,6 @@ packages:
       - supports-color
     dev: false
     optional: true
-
-  /http@0.0.1-security:
-    resolution: {integrity: sha512-RnDvP10Ty9FxqOtPZuxtebw1j4L/WiqNMDtuc1YMH1XQm5TgDRaR1G9u8upL6KD1bXHSp9eSXo/ED+8Q7FAr+g==}
-    dev: false
 
   /https-proxy-agent@5.0.1:
     resolution: {integrity: sha512-dFcAjpTQFgoLMzC2VwU+C/CbS7uRL0lWmxDITmqm7C+7F0Odmj6s9l6alZc6AELXhrnggM2CeWSXHGOdX2YtwA==}
