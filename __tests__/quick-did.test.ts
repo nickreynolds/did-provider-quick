@@ -1,4 +1,3 @@
-import { jest } from '@jest/globals'
 import { createAgent, ICredentialPlugin, IDataStore, IDataStoreORM, IDIDManager, IIdentifier, IKey, IKeyManager, IResolver, MinimalImportableKey, TAgent } from '@veramo/core'
 import { KeyManager, MemoryKeyStore, MemoryPrivateKeyStore } from '@veramo/key-manager'
 import { KeyManagementSystem, SecretBox } from '@veramo/kms-local'
@@ -24,8 +23,8 @@ import { resolveDID } from '../src/resolveDID'
 import { DataSource } from 'typeorm'
 import { DataStore, DataStoreORM, DIDStore, Entities, KeyStore, migrations, PrivateKeyStore } from '@veramo/data-store'
 import { DIDResolverPlugin } from '@veramo/did-resolver'
+import { getDidKeyResolver, KeyDIDProvider } from '@veramo/did-provider-key'
 import { getResolver as quickDidResolver } from '../src/quick-did-resolver'
-import { getResolver as ethrDidResolver } from 'ethr-did-resolver'
 import { Web3KeyManagementSystem } from '@veramo/kms-web3'
 import {
   KeyValueStore,
@@ -34,9 +33,10 @@ import {
   KeyValueTypeORMStoreAdapter,
   IKeyValueStoreOptions
 } from '@veramo/kv-store'
+import { QuickDIDRelayer} from "did-relayer-quick"
+ 
+import { afterAll, describe, test, expect, beforeAll } from "vitest"
 
-
-jest.setTimeout(10000)
 
 // const { provider, registry } = await createGanacheProvider()
 // const ethersProvider = createEthersProvider()
@@ -62,6 +62,12 @@ const dbConnection = new DataSource({
   // allow shared tests to override connection options
   //   ...options?.context?.dbConnectionOptions,
 }).initialize()
+
+
+let saveToArweaveStore = new KeyValueStore<boolean>({
+  namespace: 'save_to_arweave',
+  store: new KeyValueTypeORMStoreAdapter({ dbConnection, namespace: 'save_to_arweave' }),
+})
 
 
 
@@ -91,42 +97,18 @@ agent = createAgent<
       store: new KeyStore(dbConnection),
       kms: {
         local: new KeyManagementSystem(new PrivateKeyStore(dbConnection, new SecretBox(secretKey))),
-        // web3: new Web3KeyManagementSystem({
-        //   ethers: ethersProvider as any, // different versions of ethers complain about a type mismatch here
-        // }),
       },
     }),
     new DIDManager({
       store: new MemoryDIDStore(),
       providers: {
+        'did:key': new KeyDIDProvider({ defaultKms: 'local' }),
         'did:quick': quickDIDProvider,
-        // 'did:ethr': new EthrDIDProvider({
-        //   defaultKms: 'local',
-        //   ttl: 60 * 60 * 24 * 30 * 12 + 1,
-        //   networks: [
-        //     {
-        //       chainId: 1337,
-        //       name: 'ganache',
-        //       provider: provider as any, // different versions of ethers complain about a type mismatch here
-        //       registry,
-        //     },
-        //   ],
-        // }),
       },
       defaultProvider: 'did:quick',
     }),
     new DIDResolverPlugin({
-      // ...ethrDidResolver({
-      //   infuraProjectId,
-      //   networks: [
-      //     {
-      //       name: 'ganache',
-      //       chainId: 1337,
-      //       provider: provider as any,
-      //       registry,
-      //     },
-      //   ],
-      // }),
+      ...getDidKeyResolver(),
       ...quickDidResolver({ nodeEndpoint: 'http://localhost:3131/resolveDIDQuick' }),
     }),
     new DataStore(dbConnection),
@@ -142,6 +124,7 @@ agent = createAgent<
         new VeramoEd25519Signature2020(),
       ],
     }),
+    new QuickDIDRelayer({ saveToArweaveStore })
   ],
 })
 
@@ -149,15 +132,12 @@ const app = express()
 app.use(express.json())
 app.use('/add-did-quick-update', async (req, res) => {
   const message = req.body
-  console.log("message: ", message)
   const result = await agent.saveCredential(message)
-  console.log("result: ", result)
   res.send(result)
 })
 
 app.use('/resolveDIDQuick', async (req, res) => {
   const message = req.body
-  console.log("message: ", message)
   if (!message.didUrl) {
     throw Error('didUrl not found in request')
   }
@@ -178,7 +158,7 @@ function delay(ms: number) {
 }
 
 describe('did-provider-quick', () => {
-  it('should create identifier', async () => {
+  test('should create identifier', async () => {
     // const options: ICreateIdentifierOpts = createIdentifierOpts
     const identifier: IIdentifier = await agent.didManagerCreate({ provider: 'did:quick' })
 
@@ -189,114 +169,51 @@ describe('did-provider-quick', () => {
     expect(identifier.services.length).toBe(0)
   })
 
-  //   it('should create identifier', async () => {
-  //     // const options: ICreateIdentifierOpts = createIdentifierOpts
-  //     const identifier: IIdentifier = await agent.didManagerCreate({ provider: 'did:ethr' })
-
-  //     // console.log('identifier ethr', identifier)
-  //     expect(identifier).toBeDefined()
-
-  //     expect(identifier.keys.length).toBe(1)
-  //     expect(identifier.services.length).toBe(0)
-  //   })
-
-  //   it('should list signing options for did:ethr with web3 backed keys', async () => {
-  //     const account = `0x71CB05EE1b1F506fF321Da3dac38f25c0c9ce6E1`
-  //     const did = `did:ethr:${account}`
-  //     const controllerKeyId = `ethers-${account}`
-  //     const iid = await agent.didManagerImport({
-  //       did,
-  //       provider: 'did:ethr',
-  //       controllerKeyId,
-  //       keys: [
-  //         {
-  //           kid: controllerKeyId,
-  //           type: 'Secp256k1',
-  //           kms: 'web3',
-  //           privateKeyHex: '',
-  //           publicKeyHex: '',
-  //           meta: {
-  //             account,
-  //             provider: 'ethers',
-  //             algorithms: ['eth_signMessage', 'eth_signTypedData'],
-  //           },
-  //         } as MinimalImportableKey,
-  //       ],
-  //     })
-
-  //     const options = await agent.listUsableProofFormats(iid)
-  //     expect(options).toEqual(['EthereumEip712Signature2021'])
-  //   })
-
-  //   it('should list signing options for did:ethr with local keys', async () => {
-  //     // const account = `0x71CB05EE1b1F506fF321Da3dac38f25c0c9ce6E1`
-  //     // const did = `did:ethr:${account}`
-  //     // const controllerKeyId = `ethers-${account}`
-  //     const iid = await agent.didManagerCreate({
-  //         provider: 'did:ethr:ganache',
-  //         kms: 'local',
-  //     })
-  //     // console.log("iid: ", iid)
-  //     const options = await agent.listUsableProofFormats(iid)
-  //     expect(options).toEqual(['jwt', 'lds', 'EthereumEip712Signature2021'])
-
-  //     const iid2 = await agent.didManagerGet({
-  //         did: iid.did
-  //     })
-  //     // console.log("iid2: ", iid2)
-  //     const options2 = await agent.listUsableProofFormats(iid2)
-  //     expect(options2).toEqual(['jwt', 'lds', 'EthereumEip712Signature2021'])
-  //   })
-
-  // this fails with TypeError: Failed to parse URL from
-  // .../veramo/node_modules/.pnpm/argon2-browser@1.18.0/node_modules/argon2-browser/dist/argon2.wasm
-  it('should add key', async () => {
-    // const options: ICreateIdentifierOpts = createIdentifierOpts
+  test('should add keys', async () => {
     const identifier: IIdentifier = await agent.didManagerCreate({ provider: 'did:quick' })
 
-    // console.log('identifier', identifier)
     expect(identifier).toBeDefined()
 
     expect(identifier.keys.length).toBe(1)
     expect(identifier.services.length).toBe(0)
 
     const rootDID = identifier.did.replace('did:quick:', '')
-    console.log("rootDID: ", rootDID)
     const rootIdentifier = await agent.didManagerGet({ did: rootDID })
-    console.log("333 rootIdentifier: ", rootIdentifier)
 
     const newKey = await agent.keyManagerCreate({ kms: 'local', type: 'Ed25519' })
-    // const addOpCred = await agent.createVerifiableCredential({
-    //     credential: {
-    //         issuer: identifier.did,
-    //         issuanceDate: new Date().toISOString(),
-    //         credentialSubject: {
-    //             addOp: {
-    //                 keyAgreementKey: newKey,
-    //             },
-    //         },
-    //     },
-    //     proofFormat: 'jwt',
-    // })
-    // console.log("addOpCred: ", addOpCred)
-
-    // expect(addOpCred).toBeDefined()
-
     const added = await agent.didManagerAddKey({
       did: identifier.did,
       key: newKey,
       options: {},
     })
 
-    console.log("added: ", added)
+    const creds = await agent.dataStoreORMGetVerifiableCredentials();
+
     expect(added).toBeDefined()
 
-    const resolved = await agent.resolveDid({ didUrl: identifier.did })
+    let resolved = await agent.resolveDid({ didUrl: identifier.did })
     expect(resolved?.didDocument?.verificationMethod?.length).toBe(3)
+    expect(resolved?.didDocument?.authentication?.length).toBe(2)
+    expect(resolved?.didDocument?.assertionMethod?.length).toBe(2)
+    expect(resolved?.didDocument?.keyAgreement?.length).toBe(2)
+
+    const secpKey = await agent.keyManagerCreate({ kms: 'local', type: 'Secp256k1' })
+    const added2 = await agent.didManagerAddKey({
+      did: identifier.did,
+      key: secpKey,
+      options: {},
+    })
+
+    resolved = await agent.resolveDid({ didUrl: identifier.did })
+    expect(resolved?.didDocument?.verificationMethod?.length).toBe(4)
+    expect(resolved?.didDocument?.authentication?.length).toBe(3)
+    expect(resolved?.didDocument?.assertionMethod?.length).toBe(3)
+    // Secp256k1 keys are not added to keyAgreement
+    expect(resolved?.didDocument?.keyAgreement?.length).toBe(2)
 
   })
 
-  it('should add service', async () => {
+  test('should add service', async () => {
 
   })
 })
