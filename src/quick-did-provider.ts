@@ -36,7 +36,7 @@ export class QuickDIDProvider extends AbstractIdentifierProvider {
     context: IRequiredContext,
   ): Promise<Omit<IIdentifier, 'provider'>> {
     const rootIdentifier = await context.agent.didManagerCreate({
-      provider: 'did:ethr:ganache',
+      provider: 'did:key',
       kms: this.defaultKms,
     })
     // console.log("1 CREATED ROOT IDENTIFIER: ", rootIdentifier)

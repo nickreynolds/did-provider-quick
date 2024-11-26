@@ -1,7 +1,7 @@
 {
   "name": "did-provider-quick",
   "description": "Veramo plugin that can enable creation and control of did:quick identifiers.",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "main": "build/index.js",
   "exports": "./build/index.js",
   "types": "build/index.d.ts",
