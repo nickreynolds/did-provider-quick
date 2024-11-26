@@ -1,7 +1,7 @@
 {
   "name": "did-provider-quick",
   "description": "Veramo plugin that can enable creation and control of did:quick identifiers.",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "main": "build/index.js",
   "exports": "./build/index.js",
   "types": "build/index.d.ts",
@@ -14,7 +14,6 @@
     "top-up": "pnpm tsx ./src/utils/topUpArweaveWallet.ts"
   },
   "dependencies": {
-    "@ardrive/turbo-sdk": "^1.20.2",
     "@jest/globals": "^29.7.0",
     "@transmute/credentials-context": "^0.7.0-unstable.82",
     "@types/express": "^4.17.21",
@@ -48,7 +47,6 @@
     "@veramo/utils": "^6.0.0",
     "@witnessco/client": "^0.3.1",
     "agent-explore": "^1.72.2",
-    "arweave": "^1.15.5",
     "cross-fetch": "^4.0.0",
     "did-resolver": "^4.1.0",
     "dotenv": "^16.4.5",

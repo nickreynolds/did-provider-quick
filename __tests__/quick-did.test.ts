@@ -20,7 +20,6 @@ import {
 } from '@veramo/credential-ld'
 import { contexts as credential_contexts } from '@transmute/credentials-context'
 import express from 'express'
-import { saveDIDQuickUpdate } from '../src/saveDIDQuickUpdate'
 import { resolveDID } from '../src/resolveDID'
 import { DataSource } from 'typeorm'
 import { DataStore, DataStoreORM, DIDStore, Entities, KeyStore, migrations, PrivateKeyStore } from '@veramo/data-store'
@@ -35,8 +34,6 @@ import {
   KeyValueTypeORMStoreAdapter,
   IKeyValueStoreOptions
 } from '@veramo/kv-store'
-import { QuickDIDRelayer } from '../src/quick-did-relayer'
-import { IQuickDIDRelayer } from '../src/IQuickDIDRelayer'
 
 
 jest.setTimeout(10000)
@@ -67,11 +64,6 @@ const dbConnection = new DataSource({
 }).initialize()
 
 
-let saveToArweaveStore = new KeyValueStore<boolean>({
-  namespace: 'save_to_arweave',
-  store: new KeyValueTypeORMStoreAdapter({ dbConnection, namespace: 'save_to_arweave' }),
-})
-
 
 let agent: TAgent<
   IDIDManager &
@@ -81,8 +73,7 @@ let agent: TAgent<
   IResolver &
   ICredentialPlugin &
   ICredentialIssuerLD &
-  ICredentialIssuerEIP712 &
-  IQuickDIDRelayer
+  ICredentialIssuerEIP712
 >
 
 agent = createAgent<
@@ -93,8 +84,7 @@ agent = createAgent<
   IResolver &
   ICredentialPlugin &
   ICredentialIssuerLD &
-  ICredentialIssuerEIP712 &
-  IQuickDIDRelayer
+  ICredentialIssuerEIP712
 >({
   plugins: [
     new KeyManager({
@@ -152,7 +142,6 @@ agent = createAgent<
         new VeramoEd25519Signature2020(),
       ],
     }),
-    new QuickDIDRelayer({ saveToArweaveStore })
   ],
 })
 
@@ -305,13 +294,7 @@ describe('did-provider-quick', () => {
     const resolved = await agent.resolveDid({ didUrl: identifier.did })
     expect(resolved?.didDocument?.verificationMethod?.length).toBe(3)
 
-
-    await agent.postPendingUpdates(10);
-    await delay(240_000) // wait a minute...
-
-    await agent.postPendingUpdates(10);
-
-  }, 250_000)
+  })
 
   it('should add service', async () => {
 
