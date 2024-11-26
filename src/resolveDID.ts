@@ -11,6 +11,7 @@ type IContext = IAgentContext<IResolver & IDataStore & IDataStoreORM & ICredenti
 export async function resolveDID(did: string, agent: TAgent<IDataStore & ICredentialPlugin & ICredentialIssuerEIP712 & ICredentialIssuerLD>): Promise<DIDResolutionResult> {
   debug("did-provider-quick resolveDID: ", did)
   if (!did.startsWith('did:quick:')) {
+    debug("did-provider-quick did not of type did:quick")
     throw Error('DID not of type did:quick')
   }
   const rootDid = did.replace('did:quick:', '')
