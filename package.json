@@ -9,9 +9,6 @@
     "build": "tsc",
     "test": "vitest",
     "generate-plugin-schema": "pnpm veramo dev generate-plugin-schema",
-    "get-new-arweave-wallet": "pnpm tsx ./src/utils/getNewArweaveWallet.ts",
-    "load-arweave-wallet": "pnpm tsx ./src/utils/LoadArweaveWallet.ts",
-    "top-up": "pnpm tsx ./src/utils/topUpArweaveWallet.ts"
   },
   "dependencies": {
     "@jest/globals": "^29.7.0",
@@ -92,7 +89,6 @@
     "Verifiable Credential",
     "veramo-plugin",
     "did:quick",
-    "DIDComm",
     "ServiceEndpoint",
     "Arweave",
     "Witness Protocol"
